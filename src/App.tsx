@@ -216,7 +216,7 @@ export default function App() {
             >
                <div className="text-lg md:text-xl mb-4 tracking-widest text-zinc-800 font-medium">提示</div>
                <p className="text-zinc-500 mb-8 tracking-wider text-sm md:text-base">
-                 当前服务器繁忙，请稍后再试。
+                 当前生成人数太多，请稍后再试。
                </p>
                <button 
                  onClick={() => setShowModal(false)}
@@ -235,9 +235,32 @@ export default function App() {
 
 function InputRow({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
   const [showWarning, setShowWarning] = useState(false);
+  const isComposing = React.useRef(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
+    if (isComposing.current) {
+      onChange(val);
+      return;
+    }
+    
+    if (val.length > 6) {
+      setShowWarning(true);
+      onChange(val.slice(0, 6));
+      setTimeout(() => setShowWarning(false), 2000);
+    } else {
+      setShowWarning(false);
+      onChange(val);
+    }
+  };
+
+  const handleCompositionStart = () => {
+    isComposing.current = true;
+  };
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    isComposing.current = false;
+    const val = e.currentTarget.value;
     if (val.length > 6) {
       setShowWarning(true);
       onChange(val.slice(0, 6));
@@ -255,6 +278,8 @@ function InputRow({ label, value, onChange }: { label: string, value: string, on
         type="text" 
         value={value}
         onChange={handleChange}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         placeholder="..."
         className="bg-transparent border-0 border-b border-zinc-200 text-zinc-800 text-center text-[1.5rem] md:text-[1.8rem] w-[240px] md:w-[280px] p-2 transition-all duration-500 focus:outline-none focus:border-zinc-800 placeholder:text-zinc-200 font-sans tracking-widest"
       />

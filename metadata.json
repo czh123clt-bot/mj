@@ -1,0 +1,6 @@
+{
+  "name": "Dream Generator",
+  "description": "An artistic and minimalist web app that generates dreams based on user inputs, featuring a countdown animation, a simulated error message, and a hidden temporary easter egg.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

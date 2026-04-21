@@ -44,21 +44,28 @@ export default function App() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   // Secret state handling
   const [secretStash, setSecretStash] = useState({ location: '', sight: '', feeling: '' });
-  const [secretExpiry, setSecretExpiry] = useState<number | null>(null);
   const [isHoldingSecret, setIsHoldingSecret] = useState(false);
+  const [showValidationWarning, setShowValidationWarning] = useState(false);
 
   const handleGenerate = () => {
+    if (!location.trim() || !sight.trim() || !feeling.trim()) {
+      setShowValidationWarning(true);
+      setTimeout(() => setShowValidationWarning(false), 2000);
+      return;
+    }
+
     setSecretStash({ location, sight, feeling });
-    setSecretExpiry(Date.now() + 60000);
 
     setIsGenerating(true);
 
     setTimeout(() => {
       setIsGenerating(false);
       setShowModal(true);
+      setCooldown(180); // 3 minutes cooldown timer
       setLocation('');
       setSight('');
       setFeeling('');
@@ -66,27 +73,19 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (secretExpiry) {
-      const timeToExpiry = secretExpiry - Date.now();
-      if (timeToExpiry > 0) {
-        const timeout = setTimeout(() => {
-          setSecretExpiry(null);
-          setSecretStash({ location: '', sight: '', feeling: '' });
-          setIsHoldingSecret(false);
-        }, timeToExpiry);
-        return () => clearTimeout(timeout);
-      } else {
-        setSecretExpiry(null);
-        setSecretStash({ location: '', sight: '', feeling: '' });
-        setIsHoldingSecret(false);
-      }
+    let timer: ReturnType<typeof setInterval>;
+    if (showModal && cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown(prev => prev - 1);
+      }, 1000);
     }
-  }, [secretExpiry]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [showModal, cooldown]);
 
   const handleSecretDown = () => {
-    if (secretExpiry && Date.now() < secretExpiry) {
-      setIsHoldingSecret(true);
-    }
+    setIsHoldingSecret(true);
   };
 
   const handleSecretUp = () => {
@@ -111,43 +110,29 @@ export default function App() {
           <InputRow label="我感觉很:" value={feeling} onChange={setFeeling} />
         </div>
 
-        <button 
-          onClick={handleGenerate}
-          disabled={isGenerating || showModal}
-          className="bg-zinc-900 border border-transparent px-12 md:px-16 py-3 md:py-4 text-white text-[1rem] md:text-[1.1rem] tracking-[0.3em] rounded-full transition-all duration-300 hover:bg-zinc-800 hover:-translate-y-[2px] hover:shadow-xl hover:shadow-zinc-900/10 disabled:opacity-50 disabled:pointer-events-none cursor-pointer mt-6 md:mt-8"
-        >
-          立即生成
-        </button>
+        <div className="relative mt-6 md:mt-8 flex flex-col items-center">
+          <button 
+            onClick={handleGenerate}
+            disabled={isGenerating || showModal}
+            className="bg-zinc-900 border border-transparent px-12 md:px-16 py-3 md:py-4 text-white text-[1rem] md:text-[1.1rem] tracking-[0.3em] rounded-full transition-all duration-300 hover:bg-zinc-800 hover:-translate-y-[2px] hover:shadow-xl hover:shadow-zinc-900/10 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+          >
+            立即生成
+          </button>
+          
+          <AnimatePresence>
+            {showValidationWarning && (
+              <motion.div 
+                initial={{ opacity: 0, y: -5 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0 }} 
+                className="absolute -bottom-8 text-xs text-red-400/80 tracking-widest whitespace-nowrap"
+              >
+                请先完整回忆三个梦境碎片
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
-
-      {/* Secret Trigger Area - Bottom Right */}
-      <div 
-        className="absolute bottom-0 right-0 w-[80px] h-[80px] z-20 cursor-default" 
-        onPointerDown={handleSecretDown}
-        onPointerUp={handleSecretUp}
-        onPointerLeave={handleSecretUp}
-        onPointerCancel={handleSecretUp}
-        style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
-        title=""
-      />
-
-      {/* Secret Display Overlay */}
-      <AnimatePresence>
-        {isHoldingSecret && (
-           <motion.div 
-             initial={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
-             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-             exit={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
-             transition={{ duration: 0.3 }}
-             className="absolute bottom-[40px] right-[40px] text-xs leading-[1.8] text-zinc-400 z-30 pointer-events-none text-right tracking-widest"
-           >
-             <div className="mb-2 opacity-50">梦境残影</div>
-             <div>地点: <span className="text-zinc-800 ml-1">{secretStash.location || '...'}</span></div>
-             <div>所见: <span className="text-zinc-800 ml-1">{secretStash.sight || '...'}</span></div>
-             <div>感受: <span className="text-zinc-800 ml-1">{secretStash.feeling || '...'}</span></div>
-           </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Loading Overlay */}
       <AnimatePresence>
@@ -197,6 +182,37 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Secret Trigger Area - Now only active during Error Modal */}
+      {showModal && (
+        <>
+          <div 
+            className="absolute bottom-0 right-0 w-[100px] h-[100px] z-[60] cursor-default" 
+            onPointerDown={handleSecretDown}
+            onPointerUp={handleSecretUp}
+            onPointerLeave={handleSecretUp}
+            onPointerCancel={handleSecretUp}
+            style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+            title=""
+          />
+          <AnimatePresence>
+            {isHoldingSecret && (
+               <motion.div 
+                 initial={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
+                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                 exit={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
+                 transition={{ duration: 0.3 }}
+                 className="absolute bottom-[40px] right-[40px] text-xs leading-[1.8] text-zinc-400 z-[70] pointer-events-none text-right tracking-widest"
+               >
+                 <div className="mb-2 opacity-50">梦境残影</div>
+                 <div>地点: <span className="text-zinc-800 ml-1">{secretStash.location || '...'}</span></div>
+                 <div>所见: <span className="text-zinc-800 ml-1">{secretStash.sight || '...'}</span></div>
+                 <div>感受: <span className="text-zinc-800 ml-1">{secretStash.feeling || '...'}</span></div>
+               </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+
       {/* Error Modal */}
       <AnimatePresence>
         {showModal && (
@@ -205,25 +221,32 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-50 bg-zinc-900/20 backdrop-blur-sm flex items-center justify-center px-6"
-            onClick={() => setShowModal(false)}
           >
             <motion.div 
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              onClick={(e) => e.stopPropagation()}
               className="bg-white border border-zinc-100 p-10 md:p-12 text-center rounded-3xl shadow-2xl max-w-[400px] w-full"
             >
                <div className="text-lg md:text-xl mb-4 tracking-widest text-zinc-800 font-medium">提示</div>
                <p className="text-zinc-500 mb-8 tracking-wider text-sm md:text-base">
                  当前生成人数太多，请稍后再试。
                </p>
-               <button 
-                 onClick={() => setShowModal(false)}
-                 className="px-8 py-2 md:py-3 border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-full text-xs md:text-sm text-zinc-600 tracking-widest uppercase outline-none"
-               >
-                 确认
-               </button>
+               
+               <div className="h-10 flex flex-col items-center justify-center">
+                 {cooldown > 0 ? (
+                   <div className="text-zinc-400 tracking-widest text-sm uppercase font-light tabular-nums">
+                     请等待 {Math.floor(cooldown / 60)}:{(cooldown % 60).toString().padStart(2, '0')} 后重试
+                   </div>
+                 ) : (
+                   <button 
+                     onClick={() => setShowModal(false)}
+                     className="px-8 py-2 md:py-3 border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-full text-xs md:text-sm text-zinc-600 tracking-widest uppercase outline-none"
+                   >
+                     返回首页
+                   </button>
+                 )}
+               </div>
             </motion.div>
           </motion.div>
         )}

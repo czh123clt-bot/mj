@@ -9,32 +9,52 @@ import { AnimatePresence, motion } from 'motion/react';
 // Floating geometric symbols and numbers background component
 const DreamyBackground = () => {
   const symbols = ['△', '○', '□', '◇', '0', '1', '7', '9', 'Σ', 'π', '∞', 'Φ', 'Ψ', 'Ω', 'λ', 'ϰ', 'ζ', 'θ', '√', 'Δ', 'θ'];
+  
+  const particles = React.useMemo(() => {
+    return [...Array(10)].map((_, i) => ({
+      left: Math.random() * 100 + '%',
+      top: Math.random() * 100 + '%',
+      symbol: symbols[Math.floor(Math.random() * symbols.length)],
+      duration: Math.random() * 40 + 40,
+      delay: Math.random() * -80, // Pre-warm animation completely
+      xMove: (Math.random() - 0.5) * 80,
+      yMove: (Math.random() - 0.5) * 80,
+      opacity: Math.random() * 0.15 + 0.12,
+      scale: Math.random() * 0.7 + 0.6
+    }));
+  }, []);
+
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-zinc-50">
-      <div className="absolute inset-0 bg-gradient-to-br from-zinc-100/50 via-transparent to-zinc-200/30 z-0" />
-      {[...Array(60)].map((_, i) => (
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none">
+      {/* Base background color and gradient */}
+      <div className="absolute inset-0 bg-zinc-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-100/50 via-transparent to-zinc-200/30" />
+      
+      {particles.map((p, i) => (
         <motion.div
           key={i}
-          initial={{ 
-            left: Math.random() * 100 + '%', 
-            top: Math.random() * 100 + '%',
-            opacity: 0,
-            scale: Math.random() * 0.5 + 0.5
+          className="absolute text-zinc-500/30 font-mono text-2xl md:text-5xl"
+          style={{ 
+            left: p.left, 
+            top: p.top, 
+            opacity: p.opacity, 
+            scale: p.scale,
+            willChange: 'transform',
+            transform: 'translateZ(0)'
           }}
           animate={{ 
-            y: [0, (Math.random() - 0.5) * 200],
-            x: [0, (Math.random() - 0.5) * 200],
-            rotate: [0, 360],
-            opacity: [0, Math.random() * 0.4 + 0.2, 0]
+            x: [0, p.xMove, 0], 
+            y: [0, p.yMove, 0], 
+            rotate: [0, 360]
           }}
           transition={{ 
-            duration: Math.random() * 30 + 30, 
+            duration: p.duration, 
             repeat: Infinity, 
-            ease: "easeInOut" 
+            ease: "linear", 
+            delay: p.delay 
           }}
-          className="absolute text-zinc-400 font-mono text-2xl md:text-5xl select-none"
         >
-          {symbols[Math.floor(Math.random() * symbols.length)]}
+          {p.symbol}
         </motion.div>
       ))}
     </div>
@@ -97,7 +117,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-zinc-50 text-zinc-900 font-sans flex flex-col items-center justify-center relative overflow-hidden select-none">
+    <div className="h-[100dvh] w-full text-zinc-900 font-sans flex flex-col items-center justify-center relative overflow-hidden select-none">
       
       {/* Animated artistic background */}
       <DreamyBackground />

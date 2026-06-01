@@ -8,34 +8,35 @@ import { AnimatePresence, motion } from 'motion/react';
 
 // Floating geometric symbols and numbers background component
 const DreamyBackground = () => {
-  const symbols = ['△', '○', '□', '◇', '0', '1', 'Σ', 'π', '∞', 'Φ', 'Ψ', 'Ω', '7', '9', 'λ'];
+  const symbols = ['△', '○', '□', '◇', '0', '1', '7', '9', 'Σ', 'π', '∞', 'Φ', 'Ψ', 'Ω', 'λ', 'ϰ', 'ζ', 'θ', '√', 'Δ', 'θ'];
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-      {[...Array(40)].map((_, i) => (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-zinc-50">
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-100/50 via-transparent to-zinc-200/30 z-0" />
+      {[...Array(60)].map((_, i) => (
         <motion.div
           key={i}
           initial={{ 
-            x: Math.random() * 100 + '%', 
-            y: Math.random() * 100 + '%',
-            opacity: Math.random() * 0.3 + 0.1,
-            scale: Math.random() * 0.8 + 0.5
+            left: Math.random() * 100 + '%', 
+            top: Math.random() * 100 + '%',
+            opacity: 0,
+            scale: Math.random() * 0.5 + 0.5
           }}
           animate={{ 
-            y: [null, Math.random() * 100 + '%'],
-            x: [null, Math.random() * 100 + '%'],
-            rotate: [0, 360]
+            y: [0, (Math.random() - 0.5) * 200],
+            x: [0, (Math.random() - 0.5) * 200],
+            rotate: [0, 360],
+            opacity: [0, Math.random() * 0.4 + 0.2, 0]
           }}
           transition={{ 
-            duration: Math.random() * 40 + 30, 
+            duration: Math.random() * 30 + 30, 
             repeat: Infinity, 
-            ease: "linear" 
+            ease: "easeInOut" 
           }}
-          className="absolute text-zinc-300 font-mono text-2xl md:text-4xl select-none"
+          className="absolute text-zinc-400 font-mono text-2xl md:text-5xl select-none"
         >
           {symbols[Math.floor(Math.random() * symbols.length)]}
         </motion.div>
       ))}
-      <div className="absolute inset-0 bg-gradient-to-b from-zinc-50/20 to-zinc-50/80" />
     </div>
   );
 };

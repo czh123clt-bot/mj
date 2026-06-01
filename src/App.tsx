@@ -6,36 +6,39 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
-// Artistic, animated SVG background component
-const DreamyBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-60">
-    <motion.svg
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      className="absolute w-full h-full stroke-zinc-300 fill-none"
-      strokeWidth="0.2"
-    >
-      <motion.path
-        d="M0,50 C20,30 40,70 100,40"
-        animate={{ d: ["M0,50 C20,30 40,70 100,40", "M0,60 C30,20 50,80 100,50", "M0,50 C20,30 40,70 100,40"] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.path
-        d="M0,70 C30,40 60,90 100,60"
-        animate={{ d: ["M0,70 C30,40 60,90 100,60", "M0,80 C40,50 70,100 100,70", "M0,70 C30,40 60,90 100,60"] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        strokeWidth="0.1"
-      />
-      <motion.path
-        d="M0,30 C40,60 50,10 100,30"
-        animate={{ d: ["M0,30 C40,60 50,10 100,30", "M0,20 C50,70 60,20 100,40", "M0,30 C40,60 50,10 100,30"] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        strokeWidth="0.3"
-      />
-    </motion.svg>
-    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-zinc-50/50" />
-  </div>
-);
+// Floating geometric symbols and numbers background component
+const DreamyBackground = () => {
+  const symbols = ['△', '○', '□', '◇', '0', '1', 'Σ', 'π', '∞', 'Φ', 'Ψ', 'Ω', '7', '9', 'λ'];
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      {[...Array(40)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ 
+            x: Math.random() * 100 + '%', 
+            y: Math.random() * 100 + '%',
+            opacity: Math.random() * 0.3 + 0.1,
+            scale: Math.random() * 0.8 + 0.5
+          }}
+          animate={{ 
+            y: [null, Math.random() * 100 + '%'],
+            x: [null, Math.random() * 100 + '%'],
+            rotate: [0, 360]
+          }}
+          transition={{ 
+            duration: Math.random() * 40 + 30, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+          className="absolute text-zinc-300 font-mono text-2xl md:text-4xl select-none"
+        >
+          {symbols[Math.floor(Math.random() * symbols.length)]}
+        </motion.div>
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-b from-zinc-50/20 to-zinc-50/80" />
+    </div>
+  );
+};
 
 export default function App() {
   const [location, setLocation] = useState('');
@@ -186,7 +189,7 @@ export default function App() {
       {showModal && (
         <>
           <div 
-            className="absolute bottom-0 right-0 w-[100px] h-[100px] z-[60] cursor-default" 
+            className="absolute top-0 right-0 w-[100px] h-[100px] z-[60] cursor-default" 
             onPointerDown={handleSecretDown}
             onPointerUp={handleSecretUp}
             onPointerLeave={handleSecretUp}
